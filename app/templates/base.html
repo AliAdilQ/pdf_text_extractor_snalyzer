@@ -1,0 +1,52 @@
+{% from 'macros.html' import icon %}
+{% set workspace = current_user.is_authenticated and request.endpoint not in ['main.home', 'auth.login', 'auth.register'] %}
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Extract, analyze, and explore your PDF documents in a private, beautifully simple workspace.">
+  <title>{% block title %}PDF Text Extractor & Analyzer{% endblock %} · PDF Analyzer</title>
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('pdf-theme')||'light'}catch(e){}</script>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{{ 'workspace-body' if workspace else 'public-body' }}">
+<a class="skip-link" href="#main-content">Skip to content</a>
+{% if workspace %}
+<aside class="sidebar" id="sidebar">
+  <button class="icon-button sidebar-close" aria-label="Close navigation">{{ icon('x-lg') }}</button>
+  <a class="brand" href="{{ url_for('main.dashboard') }}"><span class="brand-icon">{{ icon('file-earmark-bar-graph') }}</span><span>PDF Analyzer<span class="brand-sub">YOUR DOCUMENT WORKSPACE</span></span></a>
+  <div class="workspace-label"><span class="tiny-avatar">{{ current_user.username[0]|upper }}</span> Personal workspace <span class="workspace-dot"></span></div>
+  <span class="nav-caption">WORKSPACE</span>
+  <nav aria-label="Workspace">
+    <a class="nav-item {{ 'active' if request.endpoint == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}">{{ icon('grid') }} Overview</a>
+    <a class="nav-item {{ 'active' if request.endpoint in ['documents.index','documents.detail'] }}" href="{{ url_for('documents.index') }}">{{ icon('files') }} My documents</a>
+    <a class="nav-item {{ 'active' if request.endpoint == 'documents.upload' }}" href="{{ url_for('documents.upload') }}">{{ icon('cloud-arrow-up') }} Upload PDF <span class="nav-plus">+</span></a>
+    <a class="nav-item {{ 'active' if request.endpoint == 'auth.profile' }}" href="{{ url_for('auth.profile') }}">{{ icon('person-circle') }} Account settings</a>
+  </nav>
+  {% if current_user.is_admin %}<span class="nav-caption">ADMINISTRATION</span><nav aria-label="Administration">
+    <a class="nav-item {{ 'active' if request.endpoint == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}">{{ icon('shield-check') }} Admin overview</a>
+    <a class="nav-item {{ 'active' if request.endpoint in ['admin.users','admin.user_detail'] }}" href="{{ url_for('admin.users') }}">{{ icon('people') }} Manage users</a>
+    <a class="nav-item {{ 'active' if request.endpoint == 'admin.documents' }}" href="{{ url_for('admin.documents') }}">{{ icon('collection') }} All documents</a>
+    <a class="nav-item {{ 'active' if request.endpoint == 'admin.analyses' }}" href="{{ url_for('admin.analyses') }}">{{ icon('bar-chart-line') }} Analysis records</a>
+  </nav>{% endif %}
+  <div class="sidebar-bottom"><div class="sidebar-tip"><span>{{ icon('lightbulb') }} A little more clarity.</span><p>Your next insight is already in your documents.</p><a href="{{ url_for('documents.upload') }}">Analyze a PDF {{ icon('arrow-up-right') }}</a></div>
+  <a class="github-link" href="https://github.com/AliAdilQ/pdf_text_extractor_snalyzer" target="_blank" rel="noopener">{{ icon('github') }} View project on GitHub {{ icon('arrow-up-right') }}</a>
+  <div class="sidebar-account"><span class="avatar">{{ current_user.username[:2]|upper }}</span><div><strong>{{ current_user.username }}</strong><small>{{ current_user.role|capitalize }} account</small></div><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-button" title="Sign out" aria-label="Sign out">{{ icon('box-arrow-right') }}</button></form></div></div>
+</aside>
+<div class="workspace-main"><header class="workspace-header"><div><button class="icon-button menu-toggle" aria-label="Toggle navigation" aria-expanded="false">{{ icon('list') }}</button><span class="breadcrumb-home">Workspace</span><span class="breadcrumb-divider">/</span><strong>{% block breadcrumb %}Overview{% endblock %}</strong></div><div class="header-actions"><span class="private-label">{{ icon('shield-lock') }} Private & secure</span><button class="icon-button theme-toggle" aria-label="Toggle color theme">{{ icon('moon') }}</button><a class="header-avatar" href="{{ url_for('auth.profile') }}" aria-label="Your profile">{{ current_user.username[0]|upper }}</a></div></header>
+{% else %}
+<header class="public-header"><a class="brand" href="{{ url_for('main.home') }}"><span class="brand-icon">{{ icon('file-earmark-bar-graph') }}</span><span>PDF Analyzer</span></a><nav aria-label="Main navigation"><a href="{{ url_for('main.home') }}#features">Features</a><a href="{{ url_for('main.home') }}#how-it-works">How it works</a><a href="https://github.com/AliAdilQ/pdf_text_extractor_snalyzer" target="_blank" rel="noopener">{{ icon('github') }} GitHub</a></nav><div class="public-actions"><button class="icon-button theme-toggle" aria-label="Toggle color theme">{{ icon('moon') }}</button>{% if current_user.is_authenticated %}<a class="btn btn-primary btn-sm" href="{{ url_for('main.dashboard') }}">My workspace {{ icon('arrow-right') }}</a>{% else %}<a class="login-link" href="{{ url_for('auth.login') }}">Log in</a><a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Get started {{ icon('arrow-right') }}</a>{% endif %}</div></header>
+{% endif %}
+<main id="main-content" class="{{ 'content-area' if workspace else '' }}">
+<div class="flash-container" aria-live="polite">{% for category,message in get_flashed_messages(with_categories=true) %}<div class="alert alert-{{ category }} modern-alert" role="alert">{{ icon('check-circle' if category == 'success' else 'info-circle') }}<span>{{ message }}</span><button class="icon-button dismiss-alert" aria-label="Dismiss message">{{ icon('x') }}</button></div>{% endfor %}</div>
+{% block content %}{% endblock %}
+</main>
+{% if workspace %}<footer class="workspace-footer">PDF Text Extractor & Analyzer <span>Built by <a href="https://github.com/AliAdilQ">AliAdilQ</a></span></footer></div>{% else %}<footer class="public-footer"><a class="brand" href="{{ url_for('main.home') }}"><span class="brand-icon">{{ icon('file-earmark-bar-graph') }}</span>PDF Analyzer</a><span>Built by <a href="https://github.com/AliAdilQ">AliAdilQ</a></span><a href="https://github.com/AliAdilQ/pdf_text_extractor_snalyzer">{{ icon('github') }} Explore the source {{ icon('arrow-up-right') }}</a></footer>{% endif %}
+<dialog id="confirm-dialog" class="confirm-dialog"><form method="dialog"><span class="large-icon rose">{{ icon('trash3') }}</span><h2>Delete this item?</h2><p id="confirm-message">This action cannot be undone.</p><div class="d-flex gap-2 justify-content-end"><button class="btn btn-quiet" value="cancel">Cancel</button><button class="btn btn-danger" value="confirm">Delete permanently</button></div></form></dialog>
+<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body></html>

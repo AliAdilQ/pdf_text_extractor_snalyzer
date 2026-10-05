@@ -1,0 +1,10 @@
+{% macro icon(name, extra='') %}<i class="bi bi-{{ name }} {{ extra }}" aria-hidden="true"></i>{% endmacro %}
+{% macro field(input, hint='', autocomplete='') %}
+<div class="form-field">{{ input.label(class='form-label') }}{{ input(class='form-control' + (' is-invalid' if input.errors else ''), autocomplete=autocomplete) }}{% if hint %}<small class="field-hint">{{ hint }}</small>{% endif %}{% for error in input.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}</div>
+{% endmacro %}
+{% macro metric(label, value, symbol, color='purple', note='') %}
+<article class="metric-card"><div class="metric-top"><span>{{ label }}</span><span class="metric-icon {{ color }}">{{ icon(symbol) }}</span></div><strong>{{ value }}</strong>{% if note %}<small>{{ note }}</small>{% endif %}</article>
+{% endmacro %}
+{% macro pagination_links(pagination, endpoint, q='', status='', sort='') %}
+{% if pagination.pages > 1 %}<nav class="pagination-wrap" aria-label="Pagination"><span>Page {{ pagination.page }} of {{ pagination.pages }}</span><div>{% if pagination.has_prev %}<a class="btn btn-sm btn-quiet" href="{{ url_for(endpoint, page=pagination.prev_num, q=q, status=status, sort=sort) }}">{{ icon('arrow-left') }} Previous</a>{% endif %}{% if pagination.has_next %}<a class="btn btn-sm btn-quiet" href="{{ url_for(endpoint, page=pagination.next_num, q=q, status=status, sort=sort) }}">Next {{ icon('arrow-right') }}</a>{% endif %}</div></nav>{% endif %}
+{% endmacro %}
